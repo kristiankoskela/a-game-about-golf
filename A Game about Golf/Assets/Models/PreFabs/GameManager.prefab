@@ -44,4 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d9db5c3ccac0214cb5c423e6fb467e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  holeTriggerScript: {fileID: 0}
+  ballControllerScript: {fileID: 0}
+  pauseMenuUI: {fileID: 0}
+  stageCompletedUI: {fileID: 0}
+  OneWayTriggers: []
   gamePaused: 0
+  slowMotionValue: 0.1

@@ -8,8 +8,13 @@ public class GameManager : MonoBehaviour
     public GameObject pauseMenuUI;
     public GameObject stageCompletedUI;
 
+    public oneWayTrigger[] OneWayTriggers;
+
     private int sceneIndex;
     public bool gamePaused;
+
+    private bool slowMotion;
+    public float slowMotionValue;
 
     private void Awake()
     {
@@ -18,8 +23,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-
-
+        slowMotion = false;
     }
     private void Update()
     {
@@ -29,6 +33,10 @@ public class GameManager : MonoBehaviour
             {
                 StageCompleted();
             }
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            ToggleSlowMotion();
         }
         if (sceneIndex != 0)
         {
@@ -92,6 +100,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void ToggleSlowMotion()
+    {
+        slowMotion = !slowMotion;
+        if (slowMotion)
+        {
+            Time.timeScale = slowMotionValue;
+        }
+        if (!slowMotion)
+        {
+            Time.timeScale = 1f;
+        }
+    }
     public void RestartLevel()
     {
 
@@ -128,6 +148,12 @@ public class GameManager : MonoBehaviour
                 //Debug.Log("Restarted stage.");
             }
         }
+
+        oneWayTrigger[] oneWayTriggers = FindObjectsByType<oneWayTrigger>(FindObjectsSortMode.None);
+        foreach (oneWayTrigger trigger in oneWayTriggers)
+        {
+            trigger.DisableCollision();
+        }
     }
 
     public void PauseGame()
@@ -151,31 +177,6 @@ public class GameManager : MonoBehaviour
 
         ballControllerScript.enabled = true;
     }
-
-    /*
-public void TogglePause()
-{
-    gamePaused = !gamePaused;
-
-    Time.timeScale = gamePaused ? 0f : 1f;
-
-    //pauseMenuUI = GameObject.FindGameObjectWithTag("PauseMenuUI");
-    if (pauseMenuUI != null)
-    {
-        pauseMenuUI.SetActive(gamePaused);
-    }
-
-    ballControllerScript = GameObject.FindGameObjectWithTag("Ball").GetComponent<ballController>();
-    if (ballControllerScript != null)
-    {
-        ballControllerScript.enabled = !gamePaused;
-    }
-    else
-    {
-        Debug.LogError("GameManager - golfBall not found!");
-    }
-}
-    */
     public void NextScene()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);

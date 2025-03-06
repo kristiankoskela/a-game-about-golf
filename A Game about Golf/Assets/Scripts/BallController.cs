@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 
 public class BallController : MonoBehaviour
@@ -60,6 +61,12 @@ public class BallController : MonoBehaviour
     public bool isIdle;
     bool isShooting;
 
+    //[Header("Outline settings")]
+    //private RectTransform outlineTransform;
+    //public float outlinePosY;
+    //public float outlineScale;
+    //public Image outline;
+
 
     Vector3 lineBallOffset;
     Vector3 lineVector;
@@ -100,9 +107,22 @@ public class BallController : MonoBehaviour
         {
             rb.position = startPosition.transform.position + new Vector3(0,startPositionY,0);
         }
+        //outline
+        //outlineTransform = GameObject.FindGameObjectWithTag("Outline").GetComponent<RectTransform>();
+        //outlineTransform.sizeDelta = new Vector2(100f * outlineScale, 100f * outlineScale);
+        //outline = GameObject.FindGameObjectWithTag("Outline").GetComponent<Image>();
+        //outline.enabled = true;
     }
     private void Update()
     {
+        //ball outline calculation
+        //Vector3 screenPos = mainCamera.WorldToScreenPoint(new Vector3(rb.position.x, outlinePosY, rb.position.z));
+        //Vector2 anchoredPos;
+
+        //RectTransformUtility.ScreenPointToLocalPointInRectangle(outlineTransform.parent as RectTransform, screenPos, mainCamera, out anchoredPos);
+
+        //outlineTransform.anchoredPosition = anchoredPos;
+
         if (isIdle && !holeTriggerScript.stageComplete)
         {
             isAiming = true;
@@ -125,7 +145,7 @@ public class BallController : MonoBehaviour
     }
     void FixedUpdate()
     {
-        overrideWallCollision();         //override collisions with walls
+        OverrideWallCollision();      //override collisions with walls
 
         currentSpeed = rb.linearVelocity.magnitude;
         if (currentSpeed > maxSpeed)
@@ -157,12 +177,12 @@ public class BallController : MonoBehaviour
             // Only perform the extra check if the object is moving fast enough to potentially tunnel
             if (rb.linearVelocity.magnitude > maxSpeed * 0.5f)
             {
-                overrideWallCollision();
+                OverrideWallCollision();
             }
         }
     }
 
-    void overrideWallCollision()
+    void OverrideWallCollision()
     {
         Vector3 rayStartPos = rb.position;
         float sphereRadius = GetComponent<SphereCollider>().radius * transform.localScale.x * collisionRadius;
@@ -300,6 +320,8 @@ public class BallController : MonoBehaviour
         float strength = Vector3.Distance(rb.position, mousePos);
         strength = Mathf.Clamp(strength, minStrength, maxStrength);
         rb.AddForce(shotPower * strength * direction);
+
+        OverrideWallCollision();
 
         currentAngleIndex = 0;
 

@@ -19,7 +19,7 @@ public class PortalTrigger : MonoBehaviour
             if (rb != null)
             {
                 GameObject outPortal = GameObject.FindGameObjectWithTag("OutPortal");
-                rb.position = outPortal.transform.position;
+                rb.position = new Vector3(outPortal.transform.position.x, 0.5f, outPortal.transform.position.z);
             }
         }
     }

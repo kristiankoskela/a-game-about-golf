@@ -16,6 +16,7 @@ TagManager:
   - WallSlow
   - OutPortal
   - SoundMixerManager
+  - Outline
   layers:
   - Default
   - TransparentFX

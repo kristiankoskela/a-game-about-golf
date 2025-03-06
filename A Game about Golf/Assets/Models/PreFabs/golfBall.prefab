@@ -332,6 +332,8 @@ MonoBehaviour:
   shotCount: 0
   currentSpeed: 0
   isIdle: 0
+  outlinePosY: 5
+  outlineScale: 0.33
 --- !u!120 &1543310068127406395
 LineRenderer:
   serializedVersion: 2
