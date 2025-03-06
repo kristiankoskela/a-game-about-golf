@@ -85,6 +85,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outPortal: {fileID: 0}
+  portalArray:
+  - {fileID: 8300000, guid: 88f0679d7ec6ebe48bc812572b7be922, type: 3}
+  - {fileID: 8300000, guid: 56bd04cd796087f4f90d9c79134ed7d5, type: 3}
+  - {fileID: 8300000, guid: d752d92320a8e604f9a59110c67d1597, type: 3}
+  - {fileID: 8300000, guid: 8eef50d0b41000244a76fc30fa35f378, type: 3}
+  - {fileID: 8300000, guid: ac2c11275b92505499289927a943fabb, type: 3}
+  portalVolume: 0.4
 --- !u!135 &8452264980639221356
 SphereCollider:
   m_ObjectHideFlags: 0
