@@ -310,7 +310,7 @@ MonoBehaviour:
   wallSlowPower: 0.3
   collisionRadius: 1.15
   closeWallDistance: 2
-  closeWallDamping: 0.6
+  closeWallDamping: 0.5
   currentAngleIndex: 0
   lineRenderer: {fileID: 1543310068127406395}
   lineOffset: 0.33
