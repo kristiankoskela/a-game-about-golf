@@ -309,6 +309,8 @@ MonoBehaviour:
   wallBouncePower: 4
   wallSlowPower: 0.3
   collisionRadius: 1.15
+  closeWallDistance: 2
+  closeWallDamping: 0.6
   currentAngleIndex: 0
   lineRenderer: {fileID: 1543310068127406395}
   lineOffset: 0.33
@@ -331,9 +333,8 @@ MonoBehaviour:
   hitWallMaxVol: 0.5
   shotCount: 0
   currentSpeed: 0
+  extraCheckEnabled: 0
   isIdle: 0
-  outlinePosY: 5
-  outlineScale: 0.33
 --- !u!120 &1543310068127406395
 LineRenderer:
   serializedVersion: 2

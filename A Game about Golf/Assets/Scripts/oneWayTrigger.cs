@@ -33,11 +33,11 @@ public class oneWayTrigger : MonoBehaviour
 
     public void EnableCollision()
     {
-        parent.gameObject.tag = "Wall";
+        parent.GetComponent<Collider>().enabled = true;
     }
 
     public void DisableCollision()
     {
-        parent.gameObject.tag = "Untagged";
+        parent.GetComponent<Collider>().enabled = false;
     }
 }
