@@ -178,11 +178,12 @@ public class BallController : MonoBehaviour
     }
     IEnumerator ExtraCollisionChecks()
     {
-        
-        WaitForSeconds waitForHalfFixedUpdate = new WaitForSeconds(Time.fixedDeltaTime * 0.5f);
 
         while (extraCheckEnabled)
         {
+            Debug.Log("Performing extra collision check");
+
+            WaitForSeconds waitForHalfFixedUpdate = new WaitForSeconds(Time.fixedDeltaTime * 0.5f);
             yield return waitForHalfFixedUpdate;
 
             /*
