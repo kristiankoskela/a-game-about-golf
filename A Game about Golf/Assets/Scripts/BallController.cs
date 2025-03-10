@@ -28,7 +28,7 @@ public class BallController : MonoBehaviour
     public float closeWallDamping;
 
     [Header("Aiming angle")]
-    public int currentAngleIndex = 0; //0 = normal, 1 = 90°, 2 = 180°, 3 = 270°
+    public int currentAngleIndex = 0;
     private Vector3 originalAimPos;
     private readonly float[] angles = { 0f, 90f, 180f, 270f };
 
@@ -41,7 +41,6 @@ public class BallController : MonoBehaviour
     public LineRenderer dashedLineRenderer;
 
     [Header("Audio settings")]
-    //[SerializeField] private AudioClip golfSwing;
     public AudioClip[] golfSwingArray;
     private float golfSwingVolume;
     public float golfSwingMinVol;
@@ -209,7 +208,7 @@ public class BallController : MonoBehaviour
                 break;
             }
 
-            Debug.Log($"Wall hit! Reflection #{i + 1} at {hit.point}");
+            //Debug.Log($"Wall hit! Reflection #{i + 1} at {hit.point}");
 
             float hitWallVolume = Mathf.Clamp(currentSpeed / maxSpeed, hitWallMinVol, hitWallMaxVol);
             SoundManager.instance.PlaySoundClip(hitWallArray[Random.Range(0, hitWallArray.Length)], transform, hitWallVolume);
@@ -226,39 +225,6 @@ public class BallController : MonoBehaviour
             rayDirection = rb.linearVelocity.normalized;
             rayDistance = rb.linearVelocity.magnitude * Time.fixedDeltaTime;
         }
-
-        /*
-        RaycastHit hit;
-        if (Physics.SphereCast(rayStartPos, colSphereRadius, rayDirection, out hit, rayDistance, wallsLayerMask))
-            {
-            float hitWallVolume = Mathf.Clamp(currentSpeed / maxSpeed, hitWallMinVol, hitWallMaxVol);
-            SoundManager.instance.PlaySoundClip(hitWallArray[Random.Range(0, hitWallArray.Length)], transform, hitWallVolume);
-
-            Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, hit.normal);
-
-            switch (hit.collider.tag)
-            {
-                case "Wall":
-                case "WallBounce":
-                case "WallSlow":
-                    // Apply common logic for all wall types
-                    rb.position = hit.point + hit.normal * colSphereRadius;
-
-                    switch (hit.collider.tag)
-                    {
-                        case "WallBounce":
-                            reflectedVelocity *= wallBouncePower;
-                            break;
-                        case "WallSlow":
-                            reflectedVelocity *= wallSlowPower;
-                            break;
-                    }
-
-                    rb.linearVelocity = reflectedVelocity * wallBounceDamping;
-                    break;
-            }
-        }
-        */
     }
     private void ApplyWallModifiers(string wallTag, ref Vector3 velocity)
     {
