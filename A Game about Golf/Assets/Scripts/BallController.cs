@@ -58,7 +58,7 @@ public class BallController : MonoBehaviour
 
     //Extra collision coroutine
     private IEnumerator extraCollisionChecks;
-    public bool extraCheckEnabled;
+    private bool extraCheckEnabled;
 
     bool isAiming;
     public bool isIdle;
@@ -185,13 +185,9 @@ public class BallController : MonoBehaviour
 
             WaitForSeconds waitForHalfFixedUpdate = new WaitForSeconds(Time.fixedDeltaTime * 0.5f);
             yield return waitForHalfFixedUpdate;
+            
+            //if (rb.linearVelocity.magnitude > maxSpeed * 0.5f) OverrideWallCollision();
 
-            /*
-            if (rb.linearVelocity.magnitude > maxSpeed * 0.5f)
-            {
-                OverrideWallCollision();
-            }
-            */
             OverrideWallCollision();
         }
     }
@@ -222,7 +218,7 @@ public class BallController : MonoBehaviour
 
             rb.position = hit.point + hit.normal * colSphereRadius;
 
-            ApplyWallModifiers(hit.collider.tag, ref reflectedVelocity);
+            ApplyWallModifiers(hit.collider.tag, ref reflectedVelocity); 
 
             rb.linearVelocity = reflectedVelocity * wallBounceDamping;
 
