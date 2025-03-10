@@ -365,7 +365,6 @@ public class BallController : MonoBehaviour
         if (strength > maxStrength / 3)
         {
             CloseWallReflect(rb.position, ref direction, ref strength, 3);
-            strength *= closeWallDamping;
         }
 
         rb.AddForce(shotPower * strength * direction);
@@ -396,6 +395,7 @@ public class BallController : MonoBehaviour
     }
     private void CloseWallDamping(string wallTag, ref float strength)
     {
+        strength *= closeWallDamping;
         switch (wallTag)
         {
             case "WallBounce":
