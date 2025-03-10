@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Runtime.CompilerServices;
 
 
 public class BallController : MonoBehaviour
@@ -23,6 +24,8 @@ public class BallController : MonoBehaviour
     public float wallBouncePower;
     public float wallSlowPower;
     public float collisionRadius;
+    public float closeWallDistance;
+    public float closeWallDamping;
 
     [Header("Aiming angle")]
     public int currentAngleIndex = 0; //0 = normal, 1 = 90°, 2 = 180°, 3 = 270°
@@ -37,7 +40,7 @@ public class BallController : MonoBehaviour
     [Header("Dashed line settings")]
     public LineRenderer dashedLineRenderer;
 
-    [Header("Sound settings")]
+    [Header("Audio settings")]
     //[SerializeField] private AudioClip golfSwing;
     public AudioClip[] golfSwingArray;
     private float golfSwingVolume;
@@ -55,7 +58,7 @@ public class BallController : MonoBehaviour
 
     //Extra collision coroutine
     private IEnumerator extraCollisionChecks;
-    private bool extraCheckEnabled = true;
+    public bool extraCheckEnabled;
 
     bool isAiming;
     public bool isIdle;
@@ -67,6 +70,8 @@ public class BallController : MonoBehaviour
     //public float outlineScale;
     //public Image outline;
 
+    private float colSphereRadius;
+    private int wallsLayerMask;
 
     Vector3 lineBallOffset;
     Vector3 lineVector;
@@ -95,8 +100,13 @@ public class BallController : MonoBehaviour
     }
     private void Start()
     {
+        //ENABLE EXTRA CHECKS
+        extraCheckEnabled = false;
         extraCollisionChecks = ExtraCollisionChecks();
         StartCoroutine(extraCollisionChecks);
+
+        wallsLayerMask = LayerMask.GetMask("Walls");
+        colSphereRadius = GetComponent<SphereCollider>().radius * transform.localScale.x * collisionRadius;
 
         GameObject startPosition = GameObject.FindGameObjectWithTag("StartPosition");
         if (startPosition == null)
@@ -115,7 +125,7 @@ public class BallController : MonoBehaviour
     }
     private void Update()
     {
-        //ball outline calculation
+        //outline
         //Vector3 screenPos = mainCamera.WorldToScreenPoint(new Vector3(rb.position.x, outlinePosY, rb.position.z));
         //Vector2 anchoredPos;
 
@@ -168,6 +178,7 @@ public class BallController : MonoBehaviour
     }
     IEnumerator ExtraCollisionChecks()
     {
+        
         WaitForSeconds waitForHalfFixedUpdate = new WaitForSeconds(Time.fixedDeltaTime * 0.5f);
 
         while (extraCheckEnabled)
@@ -185,47 +196,39 @@ public class BallController : MonoBehaviour
     void OverrideWallCollision()
     {
         Vector3 rayStartPos = rb.position;
-        float sphereRadius = GetComponent<SphereCollider>().radius * transform.localScale.x * collisionRadius;
         Vector3 rayDirection = rb.linearVelocity.normalized;
         float rayDistance = rb.linearVelocity.magnitude * Time.fixedDeltaTime;
 
         RaycastHit hit;
-        if (Physics.SphereCast(rayStartPos, sphereRadius, rayDirection, out hit, rayDistance, LayerMask.GetMask("Walls")))
-        {
+        if (Physics.SphereCast(rayStartPos, colSphereRadius, rayDirection, out hit, rayDistance, wallsLayerMask))
+            {
             //play hitWall sfx
-            float normalizedCurrentSpeed = currentSpeed / maxSpeed;
-            hitWallVolume = Mathf.Clamp(normalizedCurrentSpeed, hitWallMinVol, hitWallMaxVol);
-            int randomIndex = Random.Range(0, hitWallArray.Length);
-            SoundManager.instance.PlaySoundClip(hitWallArray[randomIndex], transform, hitWallVolume);
+            float hitWallVolume = Mathf.Clamp(currentSpeed / maxSpeed, hitWallMinVol, hitWallMaxVol);
+            SoundManager.instance.PlaySoundClip(hitWallArray[Random.Range(0, hitWallArray.Length)], transform, hitWallVolume);
 
-            if (hit.collider.CompareTag("Wall"))
+            Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, hit.normal);
+
+            switch (hit.collider.tag)
             {
-                //DEBUGGING DRAW RAY
-                Debug.DrawRay(hit.point, hit.normal * 2, Color.blue, 2f);
+                case "Wall":
+                case "WallBounce":
+                case "WallSlow":
+                    // Apply common logic for all wall types
+                    rb.position = hit.point + hit.normal * colSphereRadius;
 
+                    // Apply specific logic based on wall type
+                    switch (hit.collider.tag)
+                    {
+                        case "WallBounce":
+                            reflectedVelocity *= wallBouncePower;
+                            break;
+                        case "WallSlow":
+                            reflectedVelocity *= wallSlowPower;
+                            break;
+                    }
 
-                Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, hit.normal);
-                rb.linearVelocity = reflectedVelocity * wallBounceDamping;
-
-                rb.position = hit.point + hit.normal * sphereRadius;
-            }
-            if (hit.collider.CompareTag("WallBounce"))
-            {
-                Debug.DrawRay(hit.point, hit.normal * 4, Color.cyan, 2f);
-
-                Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity * wallBouncePower, hit.normal);
-                rb.linearVelocity = reflectedVelocity * wallBounceDamping;
-
-                rb.position = hit.point + hit.normal * sphereRadius;
-            }
-            if (hit.collider.CompareTag("WallSlow"))
-            {
-                Debug.DrawRay(hit.point, hit.normal * 1, Color.magenta, 2f);
-
-                Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity * wallSlowPower, hit.normal);
-                rb.linearVelocity = reflectedVelocity * wallBounceDamping;
-
-                rb.position = hit.point + hit.normal * sphereRadius;
+                    rb.linearVelocity = reflectedVelocity * wallBounceDamping;
+                    break; // Single break for all cases
             }
         }
     }
@@ -310,6 +313,8 @@ public class BallController : MonoBehaviour
     }
     void Shoot() //shoot ball, disable line, add to shotcount
     {
+
+
         shotCount += 1;
         lineRenderer.enabled = false;
         dashedLineRenderer.enabled = false;
@@ -319,9 +324,114 @@ public class BallController : MonoBehaviour
         Vector3 direction = aimPos.normalized;
         float strength = Vector3.Distance(rb.position, mousePos);
         strength = Mathf.Clamp(strength, minStrength, maxStrength);
+
+        /*
+        //Check for nearby walls before shooting and reflect direction and slow ball accordingly. 
+        RaycastHit hit;
+
+        if (Physics.Raycast(rb.position, direction, out hit, colSphereRadius * closeWallDistance, wallsLayerMask))
+        {
+            Debug.Log("nearby wall detected! reflecting direction, applying damping");
+
+            float hitWallVolume = Mathf.Clamp(currentSpeed / maxSpeed, hitWallMinVol, hitWallMaxVol);
+            SoundManager.instance.PlaySoundClip(hitWallArray[Random.Range(0, hitWallArray.Length)], transform, hitWallVolume);
+
+            direction = Vector3.Reflect(direction, hit.normal);
+
+            switch (hit.collider.tag)
+            {
+                case "Wall":
+                case "WallBounce":
+                case "WallSlow":
+                    // Apply common logic for all wall types
+                    rb.position = hit.point + hit.normal * colSphereRadius;
+                    strength = strength * closeWallDamping;
+
+                    switch (hit.collider.tag)
+                    {
+                        case "WallBounce":
+                            strength *= wallBouncePower;
+                            break;
+                        case "WallSlow":
+                            strength *= wallSlowPower;
+                            break;
+                    }
+                    break;
+            }
+            //check second time in case of corner or close other wall
+            if (Physics.Raycast(rb.position, direction, out hit, colSphereRadius * closeWallDistance, wallsLayerMask))
+            {
+                Debug.Log("nearby wall detected! reflecting direction, applying damping");
+
+                hitWallVolume = Mathf.Clamp(currentSpeed / maxSpeed, hitWallMinVol, hitWallMaxVol);
+                SoundManager.instance.PlaySoundClip(hitWallArray[Random.Range(0, hitWallArray.Length)], transform, hitWallVolume);
+
+                direction = Vector3.Reflect(direction, hit.normal);
+
+                switch (hit.collider.tag)
+                {
+                    case "Wall":
+                    case "WallBounce":
+                    case "WallSlow":
+                        // Apply common logic for all wall types
+                        rb.position = hit.point + hit.normal * colSphereRadius;
+                        strength = strength * closeWallDamping;
+
+                        switch (hit.collider.tag)
+                        {
+                            case "WallBounce":
+                                strength *= wallBouncePower;
+                                break;
+                            case "WallSlow":
+                                strength *= wallSlowPower;
+                                break;
+                        }
+                        break;
+                }
+                //check for a third time in case in a dead end corner
+                if (Physics.Raycast(rb.position, direction, out hit, colSphereRadius * closeWallDistance, wallsLayerMask))
+                {
+                    Debug.Log("nearby wall detected! reflecting direction, applying damping");
+
+                    hitWallVolume = Mathf.Clamp(currentSpeed / maxSpeed, hitWallMinVol, hitWallMaxVol);
+                    SoundManager.instance.PlaySoundClip(hitWallArray[Random.Range(0, hitWallArray.Length)], transform, hitWallVolume);
+
+                    direction = Vector3.Reflect(direction, hit.normal);
+
+                    switch (hit.collider.tag)
+                    {
+                        case "Wall":
+                        case "WallBounce":
+                        case "WallSlow":
+                            // Apply common logic for all wall types
+                            rb.position = hit.point + hit.normal * colSphereRadius;
+                            strength = strength * closeWallDamping;
+
+                            switch (hit.collider.tag)
+                            {
+                                case "WallBounce":
+                                    strength *= wallBouncePower;
+                                    break;
+                                case "WallSlow":
+                                    strength *= wallSlowPower;
+                                    break;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+        
+        */
+
+        if (strength > maxStrength / 3)
+        {
+            CloseWallReflect(rb.position, ref direction, ref strength, 3);
+        }
+
         rb.AddForce(shotPower * strength * direction);
 
-        OverrideWallCollision();
+        //OverrideWallCollision();
 
         currentAngleIndex = 0;
 
@@ -331,4 +441,34 @@ public class BallController : MonoBehaviour
         int randomIndex = Random.Range(0, golfSwingArray.Length);
         SoundManager.instance.PlaySoundClip(golfSwingArray[randomIndex], transform, golfSwingVolume);
     }
+    private void CloseWallReflect(Vector3 startPos, ref Vector3 direction, ref float strength, int maxReflections)
+    {
+        RaycastHit hit;
+        for (int i = 0; i < maxReflections; i++)
+        {
+            if (!Physics.Raycast(startPos, direction, out hit, colSphereRadius * closeWallDistance, wallsLayerMask))
+                break;
+
+            Debug.Log($"Close wall hit! Reflection #{i + 1}");
+
+            direction = Vector3.Reflect(direction, hit.normal);
+            startPos = hit.point + hit.normal * colSphereRadius;
+
+            CloseWallDamping(hit.collider.tag, ref strength);
+        }
+    }
+    private void CloseWallDamping(string wallTag, ref float strength)
+    {
+        strength *= closeWallDamping;
+        switch (wallTag)
+        {
+            case "WallBounce":
+                strength *= wallBouncePower;
+                break;
+            case "WallSlow":
+                strength *= wallSlowPower;
+                break;
+        }
+    }
 }
+
